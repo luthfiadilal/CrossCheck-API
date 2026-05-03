@@ -114,6 +114,98 @@ export const createMonitoringLog = async (req: AuthRequest, res: Response): Prom
 };
 
 /**
+ * POST /api/monitoring/bulk
+ * Mandor melakukan bulk insert laporan monitoring (digunakan saat sync offline)
+ *
+ * Body:
+ * [
+ *   {
+ *     worker_name: "Nama Pekerja",
+ *     details: [
+ *       { task_type_id: "TSK-xxx", quantity: "10", conditions: "BAIK", photo_path: "...", descriptions: "..." },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ */
+export const bulkCreateMonitoringLogs = async (req: AuthRequest, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const mandor_id = req.user!.user_id;
+    const reports = req.body;
+
+    if (!Array.isArray(reports) || reports.length === 0) {
+      res.status(400).json({
+        status: "error",
+        message: "Data laporan tidak valid atau kosong",
+      });
+      return;
+    }
+
+    const now = getCurrentTimestamp();
+    const createdLogs = [];
+
+    for (const report of reports) {
+      const { worker_name, details, created_at, updated_at, status_approval } = report;
+
+      if (!worker_name || !details || !Array.isArray(details) || details.length === 0) {
+        continue; // Skip invalid reports
+      }
+
+      const log_id = `LOG-${uuidv4().split("-")[0]}`;
+
+      // Buat header monitoring log
+      await TrMonitoringLog.create(
+        {
+          log_id,
+          worker_name,
+          mandor_id,
+          status_approval: status_approval || "PENDING",
+          created_at: created_at || now,
+          updated_at: updated_at || now,
+        },
+        { transaction }
+      );
+
+      // Buat detail pekerjaan
+      const detailRecords = details.map((detail: any) => ({
+        detail_id: `DTL-${uuidv4().split("-")[0]}`,
+        log_id,
+        task_type_id: detail.task_type_id,
+        quantity: detail.quantity || null,
+        conditions: detail.conditions || null,
+        photo_path: detail.photo_path || null,
+        descriptions: detail.descriptions || null,
+        locations: detail.locations || null,
+        status_task: detail.status_task || "PENDING",
+        created_at: detail.created_at || created_at || now,
+      }));
+
+      await TrMonitoringDetail.bulkCreate(detailRecords, { transaction });
+      createdLogs.push(log_id);
+    }
+
+    await transaction.commit();
+
+    res.status(201).json({
+      status: "success",
+      message: `${createdLogs.length} laporan monitoring berhasil disinkronisasi`,
+      data: { created_ids: createdLogs },
+    });
+  } catch (error: any) {
+    await transaction.rollback();
+    console.error("bulkCreateMonitoringLogs error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Terjadi kesalahan pada server saat sinkronisasi",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * GET /api/monitoring
  * Ambil semua laporan monitoring
  * - Mandor: hanya melihat laporan miliknya
@@ -131,7 +223,7 @@ export const getAllMonitoringLogs = async (req: AuthRequest, res: Response): Pro
     // Filter berdasarkan role
     const whereClause: any = {};
 
-    if (role === "MANDOR") {
+    if (role.startsWith("MANDOR")) {
       whereClause.mandor_id = user_id;
     }
 

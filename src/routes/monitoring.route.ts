@@ -6,6 +6,7 @@ import {
   getMonitoringLogById,
   updateMonitoringLog,
   deleteMonitoringLog,
+  bulkCreateMonitoringLogs,
 } from "../controllers/monitoring.controller";
 
 const router = Router();
@@ -16,6 +17,7 @@ router.get("/:id", authenticate, getMonitoringLogById);
 
 // Hanya MANDOR yang bisa buat, edit, dan hapus laporan
 router.post("/", authenticate, authorize("MANDOR"), createMonitoringLog);
+router.post("/bulk", authenticate, authorize("MANDOR"), bulkCreateMonitoringLogs);
 router.put("/:id", authenticate, authorize("MANDOR"), updateMonitoringLog);
 router.delete("/:id", authenticate, authorize("MANDOR"), deleteMonitoringLog);
 
