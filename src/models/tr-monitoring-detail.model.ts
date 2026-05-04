@@ -9,6 +9,7 @@ interface TrMonitoringDetailAttributes {
   conditions?: string | null;
   photo_path?: string | null;
   descriptions?: string | null;
+  nomor_baris?:string | null;
   locations?: string | null;
   status_task?: string | null;
   created_at?: string | null;
@@ -17,7 +18,7 @@ interface TrMonitoringDetailAttributes {
 interface TrMonitoringDetailCreationAttributes
   extends Optional<
     TrMonitoringDetailAttributes,
-    "quantity" | "conditions" | "photo_path" | "descriptions" | "locations" | "status_task" | "created_at"
+    "quantity" | "conditions" | "photo_path" | "descriptions" | "locations" | "nomor_baris" | "status_task" | "created_at"
   > { }
 
 class TrMonitoringDetail
@@ -30,6 +31,7 @@ class TrMonitoringDetail
   public conditions!: string | null;
   public photo_path!: string | null;
   public descriptions!: string | null;
+  public nomor_baris!: string | null;
   public locations!: string | null;
   public status_task!: string | null;
   public created_at!: string | null;
@@ -72,6 +74,11 @@ TrMonitoringDetail.init(
       type: DataTypes.STRING(255),
       allowNull: true,
       comment: "Catatan tambahan terkait kondisi di lapangan",
+    },
+    nomor_baris: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: "Nomor baris pekerjaan yang sedang di monitor",
     },
     locations: {
       type: DataTypes.STRING(255),
