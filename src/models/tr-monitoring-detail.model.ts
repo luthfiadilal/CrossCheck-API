@@ -5,6 +5,7 @@ interface TrMonitoringDetailAttributes {
   detail_id: string;
   log_id: string;
   task_type_id: string;
+  nama_anggota: string | null;
   quantity?: string | null;
   conditions?: string | null;
   photo_path?: string | null;
@@ -18,7 +19,7 @@ interface TrMonitoringDetailAttributes {
 interface TrMonitoringDetailCreationAttributes
   extends Optional<
     TrMonitoringDetailAttributes,
-    "quantity" | "conditions" | "photo_path" | "descriptions" | "locations" | "nomor_baris" | "status_task" | "created_at"
+     "nama_anggota"| "quantity" | "conditions" | "photo_path" | "descriptions" | "locations" | "nomor_baris" | "status_task" | "created_at"
   > { }
 
 class TrMonitoringDetail
@@ -27,6 +28,7 @@ class TrMonitoringDetail
   public detail_id!: string;
   public log_id!: string;
   public task_type_id!: string;
+  public nama_anggota!: string | null;
   public quantity!: string | null;
   public conditions!: string | null;
   public photo_path!: string | null;
@@ -54,6 +56,11 @@ TrMonitoringDetail.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       comment: "ID Jenis pekerjaan Relasi ke ms_task_type",
+    },
+    nama_anggota: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+      comment: "Nama anggota",
     },
     quantity: {
       type: DataTypes.STRING(20),
