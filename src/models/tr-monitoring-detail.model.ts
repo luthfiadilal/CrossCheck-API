@@ -59,7 +59,7 @@ TrMonitoringDetail.init(
     },
     nama_anggota: {
       type: DataTypes.STRING(200),
-      allowNull: false,
+      allowNull: true,
       comment: "Nama anggota",
     },
     quantity: {
