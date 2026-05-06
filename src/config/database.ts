@@ -15,7 +15,7 @@ const sequelize = new Sequelize(
       connectTimeout: 60000,
     },
     logging: false,
-    timezone: "+07:00",
+    timezone: "+00:00",
     define: {
       timestamps: true,
       underscored: true,

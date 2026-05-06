@@ -6,6 +6,7 @@ import TrMonitoringLog from "../models/tr-monitoring-log.model";
 import TrMonitoringDetail from "../models/tr-monitoring-detail.model";
 import MsUser from "../models/ms-user.model";
 import MsTaskType from "../models/ms-task-type.model";
+import TrMonitoringPhoto from "../models/tr-monitoring-photo.model";
 import { getCurrentTimestamp } from "../helpers/id-generator";
 
 /**
@@ -231,7 +232,10 @@ export const getPendingApprovals = async (req: AuthRequest, res: Response): Prom
         {
           model: TrMonitoringDetail,
           as: "details",
-          include: [{ model: MsTaskType, as: "taskType" }],
+          include: [
+            { model: MsTaskType, as: "taskType" },
+            { model: TrMonitoringPhoto, as: "photos" }
+          ],
         },
         {
           model: MsUser,

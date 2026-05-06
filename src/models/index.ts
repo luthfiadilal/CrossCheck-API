@@ -4,6 +4,7 @@ import MsUser from "./ms-user.model";
 import TrMonitoringLog from "./tr-monitoring-log.model";
 import TrMonitoringDetail from "./tr-monitoring-detail.model";
 import TrApprovalHistory from "./tr-approval-history.model";
+import TrMonitoringPhoto from "./tr-monitoring-photo.model";
 
 // ===================== Associations =====================
 
@@ -31,6 +32,10 @@ TrApprovalHistory.belongsTo(TrMonitoringLog, { foreignKey: "log_id", as: "monito
 MsUser.hasMany(TrApprovalHistory, { foreignKey: "approver_id", as: "approvals" });
 TrApprovalHistory.belongsTo(MsUser, { foreignKey: "approver_id", as: "approver" });
 
+// TrMonitoringDetail -> TrMonitoringPhoto (one-to-many)
+TrMonitoringDetail.hasMany(TrMonitoringPhoto, { foreignKey: "detail_id", as: "photos" });
+TrMonitoringPhoto.belongsTo(TrMonitoringDetail, { foreignKey: "detail_id", as: "detail" });
+
 // ========================================================
 
 const db = {
@@ -40,6 +45,7 @@ const db = {
   TrMonitoringLog,
   TrMonitoringDetail,
   TrApprovalHistory,
+  TrMonitoringPhoto,
 };
 
 export default db;

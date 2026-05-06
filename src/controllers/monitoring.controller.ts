@@ -5,6 +5,7 @@ import TrMonitoringLog from "../models/tr-monitoring-log.model";
 import TrMonitoringDetail from "../models/tr-monitoring-detail.model";
 import MsUser from "../models/ms-user.model";
 import MsTaskType from "../models/ms-task-type.model";
+import TrMonitoringPhoto from "../models/tr-monitoring-photo.model";
 import { getCurrentTimestamp } from "../helpers/id-generator";
 import sequelize from "../config/database";
 
@@ -81,6 +82,24 @@ export const createMonitoringLog = async (req: AuthRequest, res: Response): Prom
 
     await TrMonitoringDetail.bulkCreate(detailRecords, { transaction });
 
+    // Buat detail foto
+    for (const detail of details) {
+      if (detail.photos && Array.isArray(detail.photos) && detail.photos.length > 0) {
+        // Cari detail_id yang sesuai
+        const createdDetail = detailRecords.find((dr: any) => dr.task_type_id === detail.task_type_id);
+        if (createdDetail) {
+          const photoRecords = detail.photos.map((photo: any) => ({
+            photo_id: `PHO-${uuidv4().split("-")[0]}`,
+            detail_id: createdDetail.detail_id,
+            photo_path: photo.photo_path,
+            caption: photo.caption || null,
+            created_at: now,
+          }));
+          await TrMonitoringPhoto.bulkCreate(photoRecords, { transaction });
+        }
+      }
+    }
+
     await transaction.commit();
 
     // Ambil data lengkap dengan relasi
@@ -89,7 +108,10 @@ export const createMonitoringLog = async (req: AuthRequest, res: Response): Prom
         {
           model: TrMonitoringDetail,
           as: "details",
-          include: [{ model: MsTaskType, as: "taskType" }],
+          include: [
+            { model: MsTaskType, as: "taskType" },
+            { model: TrMonitoringPhoto, as: "photos" }
+          ],
         },
         {
           model: MsUser,
@@ -150,28 +172,58 @@ export const bulkCreateMonitoringLogs = async (req: AuthRequest, res: Response):
     const createdLogs = [];
 
     for (const report of reports) {
-      const { worker_name, details, created_at, updated_at, status_approval } = report;
+      const { log_id: existing_log_id, worker_name, details, created_at, updated_at, status_approval } = report;
 
       if (!worker_name || !details || !Array.isArray(details) || details.length === 0) {
         continue; // Skip invalid reports
       }
 
-      const log_id = `LOG-${uuidv4().split("-")[0]}`;
+      let log_id = existing_log_id;
+      let isUpdate = false;
 
-      // Buat header monitoring log
-      await TrMonitoringLog.create(
-        {
-          log_id,
-          worker_name,
-          mandor_id,
-          status_approval: status_approval || "PENDING",
-          created_at: created_at || now,
-          updated_at: updated_at || now,
-        },
-        { transaction }
-      );
+      if (log_id) {
+        const existingLog = await TrMonitoringLog.findByPk(log_id);
+        if (existingLog && existingLog.status_approval !== "APPROVED") {
+          isUpdate = true;
+          // Update header
+          await existingLog.update(
+            {
+              worker_name,
+              status_approval: "PENDING", // Back to pending after edit
+              updated_at: updated_at || now,
+            },
+            { transaction }
+          );
 
-      // Buat detail pekerjaan
+          // Clear old details and photos
+          await TrMonitoringDetail.destroy({ where: { log_id }, transaction });
+        } else if (existingLog && existingLog.status_approval === "APPROVED") {
+          // Cannot update approved logs via bulk
+          continue;
+        } else {
+          // If log_id provided but not found, create as new (should not happen normally)
+          log_id = `LOG-${uuidv4().split("-")[0]}`;
+        }
+      } else {
+        log_id = `LOG-${uuidv4().split("-")[0]}`;
+      }
+
+      if (!isUpdate) {
+        // Buat header monitoring log baru
+        await TrMonitoringLog.create(
+          {
+            log_id,
+            worker_name,
+            mandor_id,
+            status_approval: status_approval || "PENDING",
+            created_at: created_at || now,
+            updated_at: updated_at || now,
+          },
+          { transaction }
+        );
+      }
+
+      // Buat detail pekerjaan (sama untuk insert/update karena detail lama sudah dihapus jika update)
       const detailRecords = details.map((detail: any) => ({
         detail_id: `DTL-${uuidv4().split("-")[0]}`,
         log_id,
@@ -183,11 +235,29 @@ export const bulkCreateMonitoringLogs = async (req: AuthRequest, res: Response):
         descriptions: detail.descriptions || null,
         nomor_baris: detail.nomor_baris || null,
         locations: detail.locations || null,
-        status_task: detail.status_task || "PENDING",
+        status_task: "PENDING",
         created_at: detail.created_at || created_at || now,
       }));
 
       await TrMonitoringDetail.bulkCreate(detailRecords, { transaction });
+
+      // Buat detail foto
+      for (const detail of details) {
+        if (detail.photos && Array.isArray(detail.photos) && detail.photos.length > 0) {
+          const createdDetail = detailRecords.find((dr: any) => dr.task_type_id === detail.task_type_id);
+          if (createdDetail) {
+            const photoRecords = detail.photos.map((photo: any) => ({
+              photo_id: `PHO-${uuidv4().split("-")[0]}`,
+              detail_id: createdDetail.detail_id,
+              photo_path: photo.photo_path,
+              caption: photo.caption || null,
+              created_at: detail.created_at || created_at || now,
+            }));
+            await TrMonitoringPhoto.bulkCreate(photoRecords, { transaction });
+          }
+        }
+      }
+
       createdLogs.push(log_id);
     }
 
@@ -241,7 +311,10 @@ export const getAllMonitoringLogs = async (req: AuthRequest, res: Response): Pro
         {
           model: TrMonitoringDetail,
           as: "details",
-          include: [{ model: MsTaskType, as: "taskType" }],
+          include: [
+            { model: MsTaskType, as: "taskType" },
+            { model: TrMonitoringPhoto, as: "photos" }
+          ],
         },
         {
           model: MsUser,
@@ -288,7 +361,10 @@ export const getMonitoringLogById = async (req: AuthRequest, res: Response): Pro
         {
           model: TrMonitoringDetail,
           as: "details",
-          include: [{ model: MsTaskType, as: "taskType" }],
+          include: [
+            { model: MsTaskType, as: "taskType" },
+            { model: TrMonitoringPhoto, as: "photos" }
+          ],
         },
         {
           model: MsUser,
@@ -395,6 +471,23 @@ export const updateMonitoringLog = async (req: AuthRequest, res: Response): Prom
       }));
 
       await TrMonitoringDetail.bulkCreate(detailRecords, { transaction });
+
+      // Buat detail foto
+      for (const detail of details) {
+        if (detail.photos && Array.isArray(detail.photos) && detail.photos.length > 0) {
+          const createdDetail = detailRecords.find((dr: any) => dr.task_type_id === detail.task_type_id);
+          if (createdDetail) {
+            const photoRecords = detail.photos.map((photo: any) => ({
+              photo_id: `PHO-${uuidv4().split("-")[0]}`,
+              detail_id: createdDetail.detail_id,
+              photo_path: photo.photo_path,
+              caption: photo.caption || null,
+              created_at: now,
+            }));
+            await TrMonitoringPhoto.bulkCreate(photoRecords, { transaction });
+          }
+        }
+      }
     }
 
     await transaction.commit();
@@ -405,7 +498,10 @@ export const updateMonitoringLog = async (req: AuthRequest, res: Response): Prom
         {
           model: TrMonitoringDetail,
           as: "details",
-          include: [{ model: MsTaskType, as: "taskType" }],
+          include: [
+            { model: MsTaskType, as: "taskType" },
+            { model: TrMonitoringPhoto, as: "photos" }
+          ],
         },
         {
           model: MsUser,
