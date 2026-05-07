@@ -235,7 +235,7 @@ export const bulkCreateMonitoringLogs = async (req: AuthRequest, res: Response):
         descriptions: detail.descriptions || null,
         nomor_baris: detail.nomor_baris || null,
         locations: detail.locations || null,
-        status_task: "PENDING",
+        status_task: detail.status_task || "PENDING",
         created_at: detail.created_at || created_at || now,
       }));
 
