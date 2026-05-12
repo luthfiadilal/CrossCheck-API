@@ -6,6 +6,7 @@ import TrMonitoringDetail from "../models/tr-monitoring-detail.model";
 import MsUser from "../models/ms-user.model";
 import MsTaskType from "../models/ms-task-type.model";
 import TrMonitoringPhoto from "../models/tr-monitoring-photo.model";
+import TrApprovalHistory from "../models/tr-approval-history.model";
 import { getCurrentTimestamp } from "../helpers/id-generator";
 import sequelize from "../config/database";
 
@@ -321,6 +322,18 @@ export const getAllMonitoringLogs = async (req: AuthRequest, res: Response): Pro
           as: "mandor",
           attributes: ["user_id", "name", "email", "role"],
         },
+        {
+          model: TrApprovalHistory,
+          as: "approvalHistories",
+          include: [
+            {
+              model: MsUser,
+              as: "approver",
+              attributes: ["user_id", "name", "role"],
+            },
+          ],
+          order: [["action_date", "DESC"]],
+        },
       ],
       order: [["created_at", "DESC"]],
       limit: limitNum,
@@ -370,6 +383,18 @@ export const getMonitoringLogById = async (req: AuthRequest, res: Response): Pro
           model: MsUser,
           as: "mandor",
           attributes: ["user_id", "name", "email", "role"],
+        },
+        {
+          model: TrApprovalHistory,
+          as: "approvalHistories",
+          include: [
+            {
+              model: MsUser,
+              as: "approver",
+              attributes: ["user_id", "name", "role"],
+            },
+          ],
+          order: [["action_date", "DESC"]],
         },
       ],
     });
