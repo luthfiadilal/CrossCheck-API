@@ -161,3 +161,139 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
   }
 };
+
+/**
+ * GET /api/auth/users | GET /api/users
+ * Ambil semua data user (tanpa password)
+ */
+export const getAllUsers = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await MsUser.findAll({
+      attributes: [
+        "user_id",
+        "name",
+        "email",
+        "role",
+        "parent_user_id",
+        "is_active",
+        "created_at",
+        "updated_at",
+      ],
+      order: [["name", "ASC"]],
+    });
+
+    res.json({
+      status: "success",
+      message: "Data pengguna berhasil diambil",
+      data: users,
+    });
+  } catch (error: any) {
+    console.error("getAllUsers error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * PUT /api/auth/users/:id | PUT /api/users/:id
+ * Update data user (nama, email, role, is_active, dan opsional password baru)
+ */
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const { name, email, role, password, is_active } = req.body;
+
+    const user = await MsUser.findByPk(id);
+    if (!user) {
+      res.status(404).json({
+        status: "error",
+        message: "Pengguna tidak ditemukan",
+      });
+      return;
+    }
+
+    if (email && email !== user.email) {
+      const existing = await MsUser.findOne({ where: { email } });
+      if (existing) {
+        res.status(409).json({
+          status: "error",
+          message: "Email sudah digunakan oleh akun lain",
+        });
+        return;
+      }
+    }
+
+    let hashedPassword: string | undefined;
+    if (password && String(password).trim().length > 0) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(String(password), salt);
+    }
+
+    await user.update({
+      ...(name && { name: String(name).trim() }),
+      ...(email && { email: String(email).trim() }),
+      ...(role && { role: String(role).trim() }),
+      ...(hashedPassword && { password: hashedPassword }),
+      ...(is_active !== undefined && { is_active: Number(is_active) }),
+      updated_at: getCurrentTimestamp(),
+    });
+
+    res.json({
+      status: "success",
+      message: "Data pengguna berhasil diperbarui",
+      data: {
+        user_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        parent_user_id: user.parent_user_id,
+        is_active: user.is_active,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      },
+    });
+  } catch (error: any) {
+    console.error("updateUser error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * DELETE /api/auth/users/:id | DELETE /api/users/:id
+ * Hapus user
+ */
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+
+    const user = await MsUser.findByPk(id);
+    if (!user) {
+      res.status(404).json({
+        status: "error",
+        message: "Pengguna tidak ditemukan",
+      });
+      return;
+    }
+
+    await user.destroy();
+
+    res.json({
+      status: "success",
+      message: "Pengguna berhasil dihapus",
+    });
+  } catch (error: any) {
+    console.error("deleteUser error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};

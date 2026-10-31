@@ -10,6 +10,7 @@ import uploadRouter from "./upload.route";
 const router = Router();
 
 router.use("/auth", authRouter);
+router.use("/users", authRouter);
 router.use("/task-types", taskTypeRouter);
 router.use("/blocks", blockRouter);
 router.use("/monitoring", monitoringRouter);
