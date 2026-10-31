@@ -13,7 +13,7 @@ const router = Router();
 router.get(
   "/pending",
   authenticate,
-  authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"),
+  authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"),
   getPendingApprovals
 );
 
@@ -24,7 +24,7 @@ router.get("/history/:logId", authenticate, getApprovalHistory);
 router.post(
   "/detail",
   authenticate,
-  authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"),
+  authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"),
   submitDetailApproval
 );
 
@@ -32,7 +32,7 @@ router.post(
 router.post(
   "/",
   authenticate,
-  authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"),
+  authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"),
   submitApproval
 );
 

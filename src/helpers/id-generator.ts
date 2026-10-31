@@ -9,6 +9,7 @@ export const generateUserId = (role: string): string => {
     MANDOR: "MDR",
     ASISTEN_LAPANGAN: "AST",
     KEPALA_KEBUN: "KBN",
+    SUPERVISI: "SPV",
   };
 
   const prefix = role.startsWith("MANDOR")

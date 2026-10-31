@@ -14,9 +14,9 @@ const router = Router();
 router.get("/", authenticate, getAllBlocks);
 router.get("/:id", authenticate, getBlockById);
 
-// Hanya ASISTEN_LAPANGAN dan KEPALA_KEBUN yang bisa kelola master blok
-router.post("/", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"), createBlock);
-router.put("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"), updateBlock);
-router.delete("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"), deleteBlock);
+// Hanya ASISTEN_LAPANGAN, KEPALA_KEBUN, dan SUPERVISI yang bisa kelola master blok
+router.post("/", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"), createBlock);
+router.put("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"), updateBlock);
+router.delete("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"), deleteBlock);
 
 export default router;

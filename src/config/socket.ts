@@ -29,7 +29,7 @@ let ioInstance: Server | null = null;
  * 2. Server memverifikasi JWT (`user_id` & `role`) dan mengambil data `ms_user` (termasuk `parent_user_id`).
  * 3. Setiap user otomatis dimasukkan ke dalam Room spesifik:
  *    - `user:<user_id>` (Room pribadi milik user tersebut, misal `user:MDR-xxx` atau `user:AST-xxx`)
- *    - `role:APPROVER` (Jika role-nya `ASISTEN_LAPANGAN` atau `KEPALA_KEBUN`)
+ *    - `role:APPROVER` (Jika role-nya `ASISTEN_LAPANGAN`, `KEPALA_KEBUN`, atau `SUPERVISI`)
  * 4. Ketika Mandor A melakukan Sync laporan:
  *    - Jika Mandor A memiliki `parent_user_id` (atasan langsung), sinyal dikirim langsung ke `user:<parent_user_id>` dan `role:APPROVER`.
  * 5. Ketika Asisten Lapangan melakukan Approval / RE-CHECK pada laporan milik Mandor A:
@@ -89,7 +89,7 @@ export const initSocketServer = (httpServer: HttpServer): Server => {
 
     // 2. Gabung ke room role
     socket.join(`role:${role}`);
-    if (role === "ASISTEN_LAPANGAN" || role === "KEPALA_KEBUN") {
+    if (role === "ASISTEN_LAPANGAN" || role === "KEPALA_KEBUN" || role === "SUPERVISI") {
       socket.join("role:APPROVER");
     }
 

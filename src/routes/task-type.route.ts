@@ -14,9 +14,9 @@ const router = Router();
 router.get("/", authenticate, getAllTaskTypes);
 router.get("/:id", authenticate, getTaskTypeById);
 
-// Hanya ASISTEN_LAPANGAN dan KEPALA_KEBUN yang bisa kelola task types
-router.post("/", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"), createTaskType);
-router.put("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"), updateTaskType);
-router.delete("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN"), deleteTaskType);
+// Hanya ASISTEN_LAPANGAN, KEPALA_KEBUN, dan SUPERVISI yang bisa kelola task types
+router.post("/", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"), createTaskType);
+router.put("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"), updateTaskType);
+router.delete("/:id", authenticate, authorize("ASISTEN_LAPANGAN", "KEPALA_KEBUN", "SUPERVISI"), deleteTaskType);
 
 export default router;
