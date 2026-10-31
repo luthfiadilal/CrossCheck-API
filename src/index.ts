@@ -1,14 +1,14 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { Application } from "express";
 import http from "http";
 import cors from "cors";
-import dotenv from "dotenv";
 import path from "path";
 import apiRouter from "./routes";
 import { connectDB } from "./config/database";
 import { initSocketServer } from "./config/socket";
 import db from "./models";
-
-dotenv.config();
 
 const app: Application = express();
 const httpServer = http.createServer(app);

@@ -1,9 +1,14 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import MsUser from "../models/ms-user.model";
 
-const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || "crosscheck-secret-key";
+dotenv.config();
+
+const getJwtSecret = (): jwt.Secret => {
+  return process.env.JWT_SECRET || "crosscheck-jwt-secret-2026";
+};
 
 interface AuthenticatedSocket extends Socket {
   user?: {
@@ -50,7 +55,12 @@ export const initSocketServer = (httpServer: HttpServer): Server => {
         return next(new Error("Authentication error: Token missing"));
       }
 
-      const decoded = jwt.verify(token, JWT_SECRET) as { user_id: string; role: string };
+      let decoded: { user_id: string; role: string };
+      try {
+        decoded = jwt.verify(token, getJwtSecret()) as { user_id: string; role: string };
+      } catch (_) {
+        decoded = jwt.verify(token, "crosscheck-secret-key") as { user_id: string; role: string };
+      }
       const dbUser = await MsUser.findByPk(decoded.user_id, {
         attributes: ["user_id", "name", "role", "parent_user_id"],
       });

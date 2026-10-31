@@ -1,10 +1,15 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import MsUser from "../models/ms-user.model";
 import { generateUserId, getCurrentTimestamp } from "../helpers/id-generator";
 
-const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || "crosscheck-secret-key";
+dotenv.config();
+
+const getJwtSecret = (): jwt.Secret => {
+  return process.env.JWT_SECRET || "crosscheck-jwt-secret-2026";
+};
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || "7d";
 
 /**
@@ -57,7 +62,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Generate token
     const token = jwt.sign(
       { user_id: newUser.user_id, role: newUser.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
     );
 
@@ -133,7 +138,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Generate token
     const token = jwt.sign(
       { user_id: user.user_id, role: user.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
     );
 
