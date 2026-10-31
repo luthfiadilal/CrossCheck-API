@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRouter from "./auth.route";
 import taskTypeRouter from "./task-type.route";
+import blockRouter from "./block.route";
 import monitoringRouter from "./monitoring.route";
 import approvalRouter from "./approval.route";
 import exampleRouter from "./example.route";
@@ -10,6 +11,7 @@ const router = Router();
 
 router.use("/auth", authRouter);
 router.use("/task-types", taskTypeRouter);
+router.use("/blocks", blockRouter);
 router.use("/monitoring", monitoringRouter);
 router.use("/approval", approvalRouter);
 router.use("/upload", uploadRouter);

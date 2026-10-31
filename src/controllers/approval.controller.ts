@@ -8,6 +8,7 @@ import MsUser from "../models/ms-user.model";
 import MsTaskType from "../models/ms-task-type.model";
 import TrMonitoringPhoto from "../models/tr-monitoring-photo.model";
 import { getCurrentTimestamp } from "../helpers/id-generator";
+import { emitApprovalDecisionNotification } from "../config/socket";
 
 /**
  * POST /api/approval
@@ -98,6 +99,15 @@ export const submitApproval = async (req: AuthRequest, res: Response): Promise<v
     await monitoringLog.update({
       status_approval: targetStatus,
       updated_at: now,
+    });
+
+    // Pancarkan notifikasi real-time spesifik ke Mandor pemilik laporan (`monitoringLog.mandor_id`)
+    await emitApprovalDecisionNotification({
+      mandor_id: monitoringLog.mandor_id,
+      approver_id,
+      log_id,
+      status_approval: targetStatus,
+      notes: notes || null,
     });
 
     // Ambil data approval lengkap

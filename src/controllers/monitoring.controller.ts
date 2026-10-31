@@ -8,6 +8,7 @@ import MsTaskType from "../models/ms-task-type.model";
 import TrMonitoringPhoto from "../models/tr-monitoring-photo.model";
 import TrApprovalHistory from "../models/tr-approval-history.model";
 import { getCurrentTimestamp } from "../helpers/id-generator";
+import { emitMonitoringSyncedNotification } from "../config/socket";
 import sequelize from "../config/database";
 
 /**
@@ -102,6 +103,8 @@ export const createMonitoringLog = async (req: AuthRequest, res: Response): Prom
     }
 
     await transaction.commit();
+
+    await emitMonitoringSyncedNotification({ mandor_id, log_ids: [log_id], worker_name });
 
     // Ambil data lengkap dengan relasi
     const result = await TrMonitoringLog.findByPk(log_id, {
@@ -263,6 +266,10 @@ export const bulkCreateMonitoringLogs = async (req: AuthRequest, res: Response):
     }
 
     await transaction.commit();
+
+    if (createdLogs.length > 0) {
+      await emitMonitoringSyncedNotification({ mandor_id, log_ids: createdLogs, worker_name: reports[0]?.worker_name });
+    }
 
     res.status(201).json({
       status: "success",

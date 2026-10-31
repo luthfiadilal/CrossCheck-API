@@ -1,15 +1,21 @@
 import express, { Application } from "express";
+import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import apiRouter from "./routes";
 import { connectDB } from "./config/database";
+import { initSocketServer } from "./config/socket";
 import db from "./models";
 
 dotenv.config();
 
 const app: Application = express();
+const httpServer = http.createServer(app);
 const PORT: number = parseInt(process.env.PORT || "5000", 10);
+
+// Inisialisasi Socket.IO pada HTTP Server yang sama (otomatis tembus Ngrok)
+initSocketServer(httpServer);
 
 // Middlewares
 app.use(cors());
@@ -40,8 +46,8 @@ const startServer = async () => {
     console.log("📦 Database synced");
   }
 
-  app.listen(PORT, () => {
-    console.log(`⚡ Server is running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`⚡ Server & Socket.IO running on http://localhost:${PORT}`);
   });
 };
 

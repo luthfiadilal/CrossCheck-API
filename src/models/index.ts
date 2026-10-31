@@ -1,5 +1,6 @@
 import sequelize from "../config/database";
 import MsTaskType from "./ms-task-type.model";
+import MsBlock from "./ms-block.model";
 import MsUser from "./ms-user.model";
 import TrMonitoringLog from "./tr-monitoring-log.model";
 import TrMonitoringDetail from "./tr-monitoring-detail.model";
@@ -41,6 +42,7 @@ TrMonitoringPhoto.belongsTo(TrMonitoringDetail, { foreignKey: "detail_id", as: "
 const db = {
   sequelize,
   MsTaskType,
+  MsBlock,
   MsUser,
   TrMonitoringLog,
   TrMonitoringDetail,

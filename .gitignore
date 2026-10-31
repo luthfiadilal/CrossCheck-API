@@ -3,3 +3,7 @@ dist/
 .env
 *.log
 uploads/
+test-db.js
+test-db.ts
+test-socket.js
+test-socket2.js
